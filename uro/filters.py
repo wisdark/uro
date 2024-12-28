@@ -1,6 +1,7 @@
 import re
 
 re_content = re.compile(r'(post|blog)s?|docs|support/|/(\d{4}|pages?)/\d+/')
+content_patterns = []
 
 def check_ext(path, exts):
 	"""
@@ -8,11 +9,11 @@ def check_ext(path, exts):
 	"""
 	if '.' not in path.split('/')[-1]:
 		return False, False
-	return True, path.lower().endswith(tuple(exts))
+	return True, path.lower().endswith(exts)
 
 def has_ext(path, params, meta):
 	"""
-	returns True if url has no extension e.g. example.com/about-us/team
+	returns True if url has extension e.g. example.com/about-us/team.php
 	"""
 	has_ext, _ = check_ext(path, [])
 	return has_ext
@@ -60,7 +61,13 @@ def remove_content(path, params, meta):
 	for part in path.split('/'):
 		if part.count('-') > 3:
 			return False
-	return False if re_content.search(path) else True
+	if path.startswith(tuple(content_patterns)):
+		return False
+	else:
+		match = re.search(re_content,path)
+		if match:
+			content_patterns.append(path[:match.end()])
+	return True
 
 def has_vuln_param(path, params, meta):
 	"""
